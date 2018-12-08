@@ -33,7 +33,19 @@ func (a *ArgType) NewTemplateFuncs() template.FuncMap {
 		"hascolumn":          a.hascolumn,
 		"hasfield":           a.hasfield,
 		"getstartcount":      a.getstartcount,
+		"camelCaseJSON":      a.camelCaseJSON,
 	}
+}
+
+// camelCaseJSON converts generated snake column names and converts them to camel case
+func (a *ArgType) camelCaseJSON(field string) string {
+	if snaker.IsInitialism(field) {
+		return strings.ToLower(field)
+	}
+
+	camelCaseJSON := snaker.SnakeToCamel(field)
+	firstLetter := strings.ToLower(string(camelCaseJSON[0]))
+	return firstLetter + camelCaseJSON[1:]
 }
 
 // retype checks typ against known types, and prefixing

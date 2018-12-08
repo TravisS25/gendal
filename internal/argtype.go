@@ -118,6 +118,9 @@ type ArgType struct {
 	// EnablePostgresOIDs toggles postgres oids.
 	EnablePostgresOIDs bool `arg:"--enable-postgres-oids,help:enable postgres oids"`
 
+	// CamelCaseJSON converts generated snake case json tags to camel case which is more standard for json
+	CamelCaseJSON bool `arg:"--camel-case-json,help:camel cases json tags from generated struct tags"`
+
 	// NameConflictSuffix is the suffix used when a name conflicts with a scoped Go variable.
 	NameConflictSuffix string `arg:"--name-conflict-suffix,-w,help:suffix to append when a name conflicts with a Go variable"`
 

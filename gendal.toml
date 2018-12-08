@@ -134,3 +134,6 @@ EscapeTableNames = false
 # EscapeColumnNames toggles escaping column names in SQL queries.
 # (true or false)
 EscapeColumnNames = false
+
+# CamelCaseJSON camel cases json tags from generated struct tags
+CamelCaseJSON = false

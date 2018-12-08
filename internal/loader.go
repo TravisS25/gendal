@@ -545,8 +545,9 @@ func (tl TypeLoader) LoadColumns(args *ArgType, typeTpl *Type) error {
 
 		// set col info
 		f := &Field{
-			Name: snaker.SnakeToCamelIdentifier(c.ColumnName),
-			Col:  c,
+			Name:          snaker.SnakeToCamelIdentifier(c.ColumnName),
+			Col:           c,
+			CamelCaseJSON: args.CamelCaseJSON,
 		}
 		f.Len, f.NilType, f.Type = tl.ParseType(args, c.DataType, !c.NotNull)
 
