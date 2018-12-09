@@ -137,3 +137,7 @@ EscapeColumnNames = false
 
 # CamelCaseJSON camel cases json tags from generated struct tags
 CamelCaseJSON = false
+
+# Sqlx adds foreign key relationship structs and query functions to generated types to
+# use with sqlx library
+Sqlx = false
