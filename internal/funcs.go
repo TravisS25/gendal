@@ -37,6 +37,7 @@ func (a *ArgType) NewTemplateFuncs() template.FuncMap {
 		"foreignDBName":      a.foreignDBName,
 		"foreignFieldName":   a.foreignFieldName,
 		"convertName":        a.convertName,
+		"convertType":        a.convertType,
 	}
 }
 
@@ -44,7 +45,11 @@ func (a *ArgType) foreignFieldName(col string) string {
 	return (col[:len(col)-2])
 }
 
-func (a *ArgType) foreignDBName(col string) string {
+func (a *ArgType) foreignDBName(col string, camelCase bool) string {
+	if camelCase {
+		return a.camelCaseJSON(col[:len(col)-3])
+	}
+
 	return col[:len(col)-3]
 }
 
@@ -58,6 +63,27 @@ func (a *ArgType) convertName(name string) string {
 		return name[:len(name)-1] + "se"
 	default:
 		return name
+	}
+}
+
+func (a *ArgType) convertType(typ string) string {
+	switch typ {
+	case "sql.NullString":
+		return "*string"
+	case "pq.NullTime":
+		return "*string"
+	case "sql.NullFloat64":
+		return "*float64"
+	case "sql.NullInt64":
+		return "*int64"
+	case "time.Time":
+		return "string"
+	case "sql.NullBool":
+		return "*bool"
+	case "Jsonb":
+		return "queryutil.GeneralJSON"
+	default:
+		return typ
 	}
 }
 
