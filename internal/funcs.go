@@ -47,7 +47,7 @@ func (a *ArgType) foreignFieldName(col string) string {
 
 func (a *ArgType) foreignDBName(col string, camelCase bool) string {
 	if camelCase {
-		return a.camelCaseJSON(col[:len(col)-3])
+		return a.camelCaseJSON(col[:len(col)-3], "")
 	}
 
 	return col[:len(col)-3]
@@ -88,14 +88,24 @@ func (a *ArgType) convertType(typ string) string {
 }
 
 // camelCaseJSON converts generated snake column names and converts them to camel case
-func (a *ArgType) camelCaseJSON(field string) string {
+func (a *ArgType) camelCaseJSON(field string, fieldType string) string {
 	if snaker.IsInitialism(field) {
+		if fieldType == "int64" || fieldType == "sql.NullInt64" {
+			return strings.ToLower(field) + ",string"
+		}
+
 		return strings.ToLower(field)
 	}
 
 	camelCaseJSON := snaker.SnakeToCamel(field)
 	firstLetter := strings.ToLower(string(camelCaseJSON[0]))
-	return firstLetter + camelCaseJSON[1:]
+	modJSON := firstLetter + camelCaseJSON[1:]
+
+	if fieldType == "int64" || fieldType == "sql.NullInt64" {
+		return modJSON + ",string"
+	}
+
+	return modJSON
 }
 
 // retype checks typ against known types, and prefixing
