@@ -110,13 +110,14 @@ type Proc struct {
 
 // Field contains field information.
 type Field struct {
-	Name          string
-	Type          string
-	NilType       string
-	Len           int
-	Col           *models.Column
-	Comment       string
-	CamelCaseJSON bool
+	Name             string
+	Type             string
+	NilType          string
+	Len              int
+	Col              *models.Column
+	Comment          string
+	CamelCaseJSON    bool
+	IgnoreJSONFields []string
 }
 
 // Type is a template item for a type (ie, table/view/custom query).

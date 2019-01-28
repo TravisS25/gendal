@@ -38,7 +38,22 @@ func (a *ArgType) NewTemplateFuncs() template.FuncMap {
 		"foreignFieldName":   a.foreignFieldName,
 		"convertName":        a.convertName,
 		"convertType":        a.convertType,
+		"ignoreJSONFields":   a.ignoreJSONFields,
 	}
+}
+
+func (a *ArgType) ignoreJSONFields(table, field, typ string, camelCase bool) string {
+	for _, v := range a.IgnoreJSONFields {
+		if v == table+"."+field {
+			return "-"
+		}
+	}
+
+	if a.CamelCaseJSON {
+		return a.camelCaseJSON(field, typ)
+	}
+
+	return field
 }
 
 func (a *ArgType) foreignFieldName(col string) string {
@@ -67,6 +82,7 @@ func (a *ArgType) convertName(name string) string {
 }
 
 func (a *ArgType) convertType(typ string) string {
+	//fmt.Printf("type: %s\n", typ)
 	switch typ {
 	case "sql.NullString":
 		return "*string"

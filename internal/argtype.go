@@ -125,6 +125,9 @@ type ArgType struct {
 	// so that users can query foreign key tables using the sqlx library
 	Sqlx bool `arg:"--sqlx,help:adds foreign key relationship structs and query functions to generated types to use with sqlx library"`
 
+	// IgnoreJSONFields ingore json fields so they won't be marshalled
+	IgnoreJSONFields []string `arg:"--ignore-json-fields,help: excludes table/field from being marshaled.  String should be in format <table_name>.<column_name>"`
+
 	// NameConflictSuffix is the suffix used when a name conflicts with a scoped Go variable.
 	NameConflictSuffix string `arg:"--name-conflict-suffix,-w,help:suffix to append when a name conflicts with a Go variable"`
 

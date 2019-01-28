@@ -138,6 +138,10 @@ EscapeColumnNames = false
 # CamelCaseJSON camel cases json tags from generated struct tags
 CamelCaseJSON = false
 
+# Ingore json fields so they won't be marshalled 
+# Format should be <table_name>.<column_name> ie. ["address.street"]
+IgnoreJSONFields = []
+
 # Sqlx adds foreign key relationship structs and query functions to generated types to
 # use with sqlx library
 Sqlx = false
