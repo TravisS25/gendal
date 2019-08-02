@@ -34,15 +34,17 @@ func (a *ArgType) NewTemplateFuncs() template.FuncMap {
 		"hasfield":           a.hasfield,
 		"getstartcount":      a.getstartcount,
 		"camelCaseJSON":      a.camelCaseJSON,
-		"foreignDBName":      a.foreignDBName,
-		"foreignFieldName":   a.foreignFieldName,
+		"refColumn":          a.refColumn,
+		"refColumnJSON":      a.refColumnJSON,
+		"refTable":           a.refTable,
 		"convertName":        a.convertName,
 		"convertType":        a.convertType,
 		"ignoreJSONFields":   a.ignoreJSONFields,
+		"idIsInt64":          a.idIsInt64,
 	}
 }
 
-func (a *ArgType) ignoreJSONFields(table, field, typ string, camelCase bool) string {
+func (a *ArgType) ignoreJSONFields(table, field, typ string) string {
 	for _, v := range a.IgnoreJSONFields {
 		if v == table+"."+field {
 			return "-"
@@ -56,16 +58,50 @@ func (a *ArgType) ignoreJSONFields(table, field, typ string, camelCase bool) str
 	return field
 }
 
-func (a *ArgType) foreignFieldName(col string) string {
-	return (col[:len(col)-2])
-}
-
-func (a *ArgType) foreignDBName(col string, camelCase bool) string {
-	if camelCase {
-		return a.camelCaseJSON(col[:len(col)-3], "")
+func (a *ArgType) idIsInt64(typ string) bool {
+	if typ == "int64" {
+		return true
 	}
 
-	return col[:len(col)-3]
+	return false
+}
+
+func (a *ArgType) refTable(table string) string {
+	return snaker.SnakeToCamel(table)
+}
+
+func (a *ArgType) refColumnJSON(col string) string {
+	// Checking if length of reference column is greater than 3
+	// If it's not, then col is probably both a primary key and
+	// foreign key to another table
+	if len(col) > 3 {
+		col = col[:len(col)-3]
+	} else {
+		col = col + "_ref"
+	}
+
+	if a.CamelCaseJSON {
+		return a.camelCaseJSON(col, "")
+	}
+
+	return col
+}
+
+func (a *ArgType) refColumn(col string, camelCase bool) string {
+	// Checking if length of reference column is greater than 3
+	// If it's not, then col is probably both a primary key and
+	// foreign key to another table
+	if len(col) > 3 {
+		col = col[:len(col)-3]
+	} else {
+		col = col + "_ref"
+	}
+
+	if camelCase {
+		return snaker.SnakeToCamel(col)
+	}
+
+	return col
 }
 
 func (a *ArgType) convertName(name string) string {

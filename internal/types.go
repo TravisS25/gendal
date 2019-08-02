@@ -130,8 +130,9 @@ type Type struct {
 	Fields           []*Field
 	Table            *models.Table
 	Comment          string
-	ForeignKeys      []*ForeignKey
-	Sqlx             bool
+	// ForeignKeys      []*ForeignKey
+	ForeignKeys []*models.ForeignKey
+	Sqlx        bool
 }
 
 // ForeignKey is a template item for a foreign relationship on a table.

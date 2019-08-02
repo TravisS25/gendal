@@ -15,6 +15,8 @@ import (
 	"github.com/turnkey-commerce/gendal/models"
 )
 
+var IsCockroachDB bool
+
 // Loader is the common interface for database drivers that can generate code
 // from a database schema.
 type Loader interface {
@@ -287,10 +289,10 @@ func (tl TypeLoader) LoadSchema(args *ArgType) error {
 	}
 
 	// load indexes
-	_, err = tl.LoadIndexes(args, tableMap)
-	if err != nil {
-		return err
-	}
+	// _, err = tl.LoadIndexes(args, tableMap)
+	// if err != nil {
+	// 	return err
+	// }
 
 	return nil
 }
@@ -509,17 +511,33 @@ func (tl TypeLoader) LoadRelkind(args *ArgType, relType RelType) (map[string]*Ty
 		t.Sqlx = args.Sqlx
 		// If args.Sqlx is true, get foreign keys for current table and add to our type
 		if args.Sqlx {
-			foreignKeyList, err := tl.ForeignKeyList(args.DB, args.Schema, t.Table.TableName)
+			// foreignKeyList, err := tl.ForeignKeyList(args.DB, args.Schema, t.Table.TableName)
+
+			// if err != nil {
+			// 	return nil, err
+			// }
+
+			// // Hack function used to get proper foreign keys from cockroachdb
+			// foreignKeyList, err = tl.extractProperForeignKeys(foreignKeyList, args.DSN)
+
+			// // // Using GetTableForeignKeys to retrieve slice of internal#ForeignKey on per table basis
+			// t.ForeignKeys, err = tl.GetTableForeignKeys(args, tableMap, t, nil, foreignKeyList)
+
+			// if err != nil {
+			// 	return nil, err
+			// }
+
+			url, err := dburl.Parse(args.DSN)
 
 			if err != nil {
 				return nil, err
 			}
 
-			// Hack function used to get proper foreign keys from cockroachdb
-			foreignKeyList, err = tl.extractProperForeignKeys(foreignKeyList, args.DSN)
-
-			// Using GetTableForeignKeys to retrieve slice of internal#ForeignKey on per table basis
-			t.ForeignKeys, err = tl.GetTableForeignKeys(args, tableMap, t, nil, foreignKeyList)
+			if url.Unaliased == "cockroachdb" {
+				t.ForeignKeys, err = cockroachDBForeignKeyList(args.DB, args.Schema, t.Table.TableName)
+			} else {
+				t.ForeignKeys, err = tl.ForeignKeyList(args.DB, args.Schema, t.Table.TableName)
+			}
 
 			if err != nil {
 				return nil, err
@@ -533,6 +551,55 @@ func (tl TypeLoader) LoadRelkind(args *ArgType, relType RelType) (map[string]*Ty
 	}
 
 	return tableMap, nil
+}
+
+// Will have to organize this better later but this is used to get all foreign
+// key references as the query now for postgres does not work for cockroachdb
+// if you add foreign key reference after a table create (alter table)
+func cockroachDBForeignKeyList(db models.XODB, schema string, table string) ([]*models.ForeignKey, error) {
+	var err error
+
+	// sql query
+	const sqlstr = `
+	SELECT 
+		kcu.column_name, 
+		ccu.table_name AS foreign_table_name
+	FROM 
+		information_schema.table_constraints AS tc 
+		JOIN information_schema.key_column_usage AS kcu
+		ON tc.constraint_name = kcu.constraint_name
+		AND tc.table_schema = kcu.table_schema
+		JOIN information_schema.constraint_column_usage AS ccu
+		ON ccu.constraint_name = tc.constraint_name
+		AND ccu.table_schema = tc.table_schema
+	WHERE 
+		tc.constraint_type = 'FOREIGN KEY' AND tc.table_schema = $1 AND tc.table_name= $2
+	ORDER BY
+		foreign_table_name, kcu.column_name;
+	`
+
+	// run query
+	q, err := db.Query(sqlstr, schema, table)
+	if err != nil {
+		return nil, err
+	}
+	defer q.Close()
+
+	// load results
+	res := []*models.ForeignKey{}
+	for q.Next() {
+		fk := models.ForeignKey{}
+
+		// scan
+		err = q.Scan(&fk.ColumnName, &fk.RefTableName)
+		if err != nil {
+			return nil, err
+		}
+
+		res = append(res, &fk)
+	}
+
+	return res, nil
 }
 
 // LoadColumns loads schema table/view columns.
