@@ -559,23 +559,49 @@ func (tl TypeLoader) LoadRelkind(args *ArgType, relType RelType) (map[string]*Ty
 func cockroachDBForeignKeyList(db models.XODB, schema string, table string) ([]*models.ForeignKey, error) {
 	var err error
 
-	// sql query
+	// // sql query
+	// const sqlstr = `
+	// SELECT
+	// 	kcu.column_name,
+	// 	ccu.table_name AS foreign_table_name
+	// FROM
+	// 	information_schema.table_constraints AS tc
+	// 	JOIN information_schema.key_column_usage AS kcu
+	// 	ON tc.constraint_name = kcu.constraint_name
+	// 	AND tc.table_schema = kcu.table_schema
+	// 	JOIN information_schema.constraint_column_usage AS ccu
+	// 	ON ccu.constraint_name = tc.constraint_name
+	// 	AND ccu.table_schema = tc.table_schema
+	// WHERE
+	// 	tc.constraint_type = 'FOREIGN KEY' AND tc.table_schema = $1 AND tc.table_name= $2
+	// ORDER BY
+	// 	foreign_table_name, kcu.column_name;
+	// `
+
 	const sqlstr = `
 	SELECT 
 		kcu.column_name, 
-		ccu.table_name AS foreign_table_name
+		ccu.table_name
 	FROM 
 		information_schema.table_constraints AS tc 
-		JOIN information_schema.key_column_usage AS kcu
-		ON tc.constraint_name = kcu.constraint_name
-		AND tc.table_schema = kcu.table_schema
-		JOIN information_schema.constraint_column_usage AS ccu
-		ON ccu.constraint_name = tc.constraint_name
-		AND ccu.table_schema = tc.table_schema
+	JOIN 
+		information_schema.key_column_usage AS kcu
+	ON 
+		tc.constraint_name = kcu.constraint_name
+	AND 
+		tc.table_schema = kcu.table_schema
+	JOIN 
+		information_schema.constraint_column_usage AS ccu
+	ON 
+		ccu.constraint_name = tc.constraint_name
+	AND 
+		ccu.table_schema = tc.table_schema
 	WHERE 
-		tc.constraint_type = 'FOREIGN KEY' AND tc.table_schema = $1 AND tc.table_name= $2
+		tc.constraint_type = 'FOREIGN KEY' AND tc.table_schema = $1 AND tc.table_name = $2
+	GROUP by
+		ccu.table_name, ccu.constraint_name, kcu.column_name
 	ORDER BY
-		foreign_table_name, kcu.column_name;
+		ccu.table_name, kcu.column_name;
 	`
 
 	// run query
