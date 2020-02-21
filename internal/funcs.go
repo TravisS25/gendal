@@ -133,7 +133,7 @@ func (a *ArgType) convertType(typ string) string {
 	case "sql.NullBool":
 		return "*bool"
 	case "Jsonb":
-		return "webutil.GeneralJSON"
+		return "string"
 	default:
 		return typ
 	}
