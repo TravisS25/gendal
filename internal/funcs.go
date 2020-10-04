@@ -132,8 +132,10 @@ func (a *ArgType) convertType(typ string) string {
 		return "string"
 	case "sql.NullBool":
 		return "*bool"
-	case "Jsonb":
+	case "jsonb":
 		return "string"
+	case "*jsonb":
+		return "*string"
 	default:
 		return typ
 	}

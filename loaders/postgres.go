@@ -184,6 +184,15 @@ func PgParseType(args *internal.ArgType, dt string, nullable bool) (int, string,
 	case "uuid":
 		nilVal = "uuid.New()"
 		typ = "uuid.UUID"
+		if nullable {
+			typ = "*uuid.UUID"
+		}
+	case "jsonb":
+		nilVal = ""
+		typ = "jsonb"
+		if nullable {
+			typ = "*jsonb"
+		}
 
 	default:
 		if strings.HasPrefix(dt, args.Schema+".") {
