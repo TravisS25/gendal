@@ -35,12 +35,16 @@ func (a *ArgType) NewTemplateFuncs() template.FuncMap {
 		"getstartcount":      a.getstartcount,
 		"camelCaseJSON":      a.camelCaseJSON,
 		"refColumn":          a.refColumn,
+		"refColumnForWeb":    a.refColumnForWeb,
 		"refColumnJSON":      a.refColumnJSON,
 		"refTable":           a.refTable,
 		"convertName":        a.convertName,
 		"convertType":        a.convertType,
+		"convertTypeForWeb":  a.convertTypeForWeb,
+		"convertFieldForWeb": a.convertFieldForWeb,
 		"ignoreJSONFields":   a.ignoreJSONFields,
 		"idIsInt64":          a.idIsInt64,
+		"defaultStringValue": a.defaultStringValue,
 	}
 }
 
@@ -104,6 +108,24 @@ func (a *ArgType) refColumn(col string, camelCase bool) string {
 	return col
 }
 
+func (a *ArgType) refColumnForWeb(col string, camelCase bool) string {
+	// Checking if length of reference column is greater than 3
+	// If it's not, then col is probably both a primary key and
+	// foreign key to another table
+	if len(col) > 3 {
+		col = col[:len(col)-3]
+	} else {
+		col = col + "_ref"
+	}
+
+	if camelCase {
+		camelCol := snaker.SnakeToCamel(col)
+		return strings.ToLower(string(camelCol[0])) + camelCol[1:]
+	}
+
+	return col
+}
+
 func (a *ArgType) convertName(name string) string {
 	lastLetter := name[len(name)-1:]
 
@@ -139,6 +161,55 @@ func (a *ArgType) convertType(typ string) string {
 	default:
 		return typ
 	}
+}
+
+func (a *ArgType) convertTypeForWeb(typ string) string {
+	//fmt.Printf("type: %s\n", typ)
+	switch typ {
+	case "sql.NullString", "*string":
+		return "string"
+	case "pq.NullTime":
+		return "string"
+	case "sql.NullFloat64", "float64":
+		return "string"
+	case "sql.NullInt64", "int64":
+		return "string"
+	case "time.Time":
+		return "string"
+	case "sql.NullBool", "bool":
+		return "boolean"
+	case "jsonb", "*jsonb":
+		return "any"
+	case "uuid.UUID", "*uuid.UUID":
+		return "string"
+	default:
+		return typ
+	}
+}
+
+func (a *ArgType) convertFieldForWeb(field string) string {
+	var newField string
+
+	//fmt.Printf("column field: %s\n", field)
+
+	if snaker.IsInitialism(field) {
+		newField = strings.ToLower(field)
+	} else {
+		camelCaseField := snaker.SnakeToCamel(field)
+		firstLetterField := strings.ToLower(string(camelCaseField[0]))
+		newField = firstLetterField + camelCaseField[1:]
+	}
+
+	return newField
+}
+
+func (a *ArgType) defaultStringValue(table string, field string) string {
+	camelCaseTable := snaker.SnakeToCamel(table)
+	firstLetterTable := strings.ToLower(string(camelCaseTable[0]))
+	newTable := firstLetterTable + camelCaseTable[1:]
+	newField := a.convertFieldForWeb(field)
+
+	return newTable + "." + newField
 }
 
 // camelCaseJSON converts generated snake column names and converts them to camel case
