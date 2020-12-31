@@ -332,6 +332,7 @@ func (a *ArgType) shortname(typ string, scopeConflicts ...interface{}) string {
 		"regexp":  true,
 		"strings": true,
 		"time":    true,
+		"pgtype":  true,
 	}
 
 	// add scopeConflicts to conflicts

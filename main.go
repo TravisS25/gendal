@@ -25,6 +25,11 @@ import (
 	_ "github.com/xo/xoutil"
 )
 
+var (
+	// Version is the Semver version of the application.
+	version = "1.2.7"
+)
+
 func main() {
 	// circumvent all logic to just determine if xo was built with oracle
 	// support
@@ -41,14 +46,28 @@ func main() {
 	var err error
 
 	// get defaults
-	internal.Args = internal.NewDefaultArgs()
+	internal.Args = internal.NewDefaultArgs(version)
 	args := internal.Args
 
 	// first look for settings in a gendal.toml config file
 	viper.SetConfigName("gendal")
 	viper.SetConfigType("toml")
 	viper.AddConfigPath(".")
-	viper.ReadInConfig() // Find and read the config file
+
+	// Find and read the config file
+	usingCommandLine := false
+	err = viper.ReadInConfig()
+	if err != nil {
+		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+			fmt.Fprint(os.Stderr, "config file not found, using command line arguments\n")
+			usingCommandLine = true
+		} else {
+			fmt.Fprintf(os.Stderr, "unable to read the config file, %v", err)
+			os.Exit(1)
+		}
+	}
+
+	// Decode config file to the args.
 	err = viper.Unmarshal(&args)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "unable to decode into struct, %v", err)
@@ -56,7 +75,9 @@ func main() {
 	}
 
 	// parse args from command line
-	arg.MustParse(args)
+	if usingCommandLine {
+		arg.MustParse(args)
+	}
 
 	// process args
 	err = processArgs(args)
@@ -221,6 +242,11 @@ func processArgs(args *internal.ArgType) error {
 		}
 	}
 
+	err = args.PopulateInternalTypeOverrides()
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -376,5 +402,10 @@ func writeTypes(args *internal.ArgType) error {
 	}
 
 	// process written files with goimports
-	return exec.Command("goimports", params...).Run()
+	output, err := exec.Command("goimports", params...).CombinedOutput()
+	if err != nil {
+		return errors.New(string(output))
+	}
+
+	return nil
 }
