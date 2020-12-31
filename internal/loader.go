@@ -15,8 +15,6 @@ import (
 	"github.com/turnkey-commerce/gendal/models"
 )
 
-var IsCockroachDB bool
-
 // Loader is the common interface for database drivers that can generate code
 // from a database schema.
 type Loader interface {

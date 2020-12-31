@@ -86,10 +86,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	if args.DSN == "cockroachdb" {
-		internal.IsCockroachDB = true
-	}
-
 	// open database
 	err = openDB(args)
 	if err != nil {
