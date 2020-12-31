@@ -1,8 +1,8 @@
 package postgrestypes
 
 import (
-	"strings"
 	"errors"
+	"strings"
 )
 
 // PgtypeMode represents the way types should be generated for postgres.
@@ -328,6 +328,12 @@ func postgresNameToGoName(dt string, nullable bool, asSlice *bool, int32Type str
 	case "uuid":
 		nilVal = "uuid.New()"
 		typ = "uuid.UUID"
+	case "jsonb":
+		nilVal = ""
+		typ = "jsonb"
+		if nullable {
+			typ = "*jsonb"
+		}
 	default:
 		return "", "", false
 	}
