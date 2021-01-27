@@ -147,7 +147,7 @@ func (a *ArgType) convertType(typ string) string {
 	case "pq.NullTime":
 		return "*string"
 	case "sql.NullFloat64":
-		return "*float64"
+		return "*decimal.Decimal"
 	case "sql.NullInt64":
 		return "*int64"
 	case "time.Time":
@@ -158,6 +158,8 @@ func (a *ArgType) convertType(typ string) string {
 		return "string"
 	case "*jsonb":
 		return "*string"
+	case "float64":
+		return "decimal.Decimal"
 	default:
 		return typ
 	}
