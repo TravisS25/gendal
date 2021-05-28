@@ -182,8 +182,10 @@ func (a *ArgType) convertTypeForWeb(typ string) string {
 		return "boolean"
 	case "jsonb", "*jsonb":
 		return "any"
-	case "uuid.UUID", "*uuid.UUID":
+	case "uuid.UUID", "*uuid.UUID", "uuid.NullUUID", "*uuid.NullUUID":
 		return "string"
+	case "int16":
+		return "number"
 	default:
 		return typ
 	}

@@ -327,10 +327,15 @@ func postgresNameToGoName(dt string, nullable bool, asSlice *bool, int32Type str
 
 	case "uuid":
 		nilVal = "uuid.New()"
-		typ = "uuid.UUID"
-		if nullable {
-			typ = "*uuid.UUID"
-		}
+		typ = "uuid.NullUUID"
+		// if nullable {
+		// 	typ = "*uuid.UUID"
+		// }
+
+		// typ = "uuid.UUID"
+		// if nullable {
+		// 	typ = "*uuid.UUID"
+		// }
 	case "jsonb":
 		nilVal = ""
 		typ = "jsonb"
